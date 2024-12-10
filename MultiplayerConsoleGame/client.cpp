@@ -5,7 +5,7 @@
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <iostream>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -16,7 +16,7 @@
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
 
-int __cdecl client()
+int __cdecl client(char ipaddr[])
 {
 
     WSADATA wsaData;
@@ -42,7 +42,7 @@ int __cdecl client()
     hints.ai_protocol = IPPROTO_TCP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo("127.0.0.1", DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo("10.22.160.19", DEFAULT_PORT, &hints, &result);
     if (iResult != 0) {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
@@ -103,8 +103,10 @@ int __cdecl client()
     do {
 
         iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-        if (iResult > 0)
-            printf("Bytes received: %d\n", iResult);
+        if (iResult > 0) {
+            std::cout << recvbuf;
+        }
+        //printf("Bytes received: %d\n", iResult);
         else if (iResult == 0)
             printf("Connection closed\n");
         else

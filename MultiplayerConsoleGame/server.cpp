@@ -7,7 +7,7 @@
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <iostream>
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
 // #pragma comment (lib, "Mswsock.lib")
@@ -100,7 +100,20 @@ int __cdecl server(void)
             printf("Bytes received: %d\n", iResult);
 
             // Echo the buffer back to the sender
-            iSendResult = send(ClientSocket, recvbuf, iResult, 0);
+            char inp[100] = "";
+            while (1) {
+                for (int i = 0; i < 100; i++) {
+                    inp[i] = getchar();
+                    if (inp[i] == 10) {
+                        inp[i] == 0x1b;
+                        break;
+                    }
+                }
+
+                iSendResult = send(ClientSocket, inp, 100, 0);
+                
+            }
+            
             if (iSendResult == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
                 closesocket(ClientSocket);
