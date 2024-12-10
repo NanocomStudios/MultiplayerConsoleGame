@@ -1,16 +1,60 @@
 #include <iostream>
+#include <Windows.h>
+#include <conio.h>
+
 #include "server.h"
 #include "client.h"
+#include "screenCtrl.h"
 
 using namespace std;
 
+short menuSelection = 0;
+
 int main(int argc, char** argv) {
-	if (argc >= 2) {
-		if (*argv[1] == 'c') {
-			client(argv[1]);
-		}
-		else if (*argv[1] == 's') {
-			server();
-		}
-	}
+    setCursor(false);
+    system("cls");
+
+    drawMenu();
+
+    drawHostGame(menuSelection);
+    drawConnect(menuSelection);
+    drawExit(menuSelection);
+
+    int inp;
+
+    while (1) {
+        inp = _getch();
+
+        //77 - right
+        //75 - left
+        //72 - up
+        //80 - down
+
+        if (inp == 72) {
+            if (menuSelection > 0) {
+                menuSelection--;
+            }
+        }
+        else if (inp == 80) {
+            if (menuSelection < 2) {
+                menuSelection++;
+            }
+        }
+        else if ((inp == 13) || (inp == 32)) {
+            if (menuSelection == 0) {
+                //game();
+            }
+            else if (menuSelection >= 2) {
+                normalColor();
+                system("cls");
+                return 0;
+            }
+        }
+
+        drawHostGame(menuSelection);
+        drawConnect(menuSelection);
+        drawExit(menuSelection);
+
+    }
+
 }

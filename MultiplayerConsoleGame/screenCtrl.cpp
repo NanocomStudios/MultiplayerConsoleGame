@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include "screenCtrl.h"
 
 using namespace std;
@@ -39,4 +38,97 @@ void setCursor(bool state) {
         code[5] = 'h';
     }
     cout << code;
+}
+
+#include <iostream>
+#include <time.h>
+#include <stdlib.h>
+#include <windows.h>
+#include <conio.h>
+
+
+void drawMenu() {
+    consoleColorSet(94);
+    drawPlayField();
+    consoleColorSet(92);
+    moveCsr(2, 5);
+    cout << "/===   |====\\      /=\\      /====  /====";
+    moveCsr(3, 5);
+    cout << "|      |    |     /   \\     |      |";
+    moveCsr(4, 5);
+    cout << "\\===\\  |====/    /=====\\    |      |===";
+    moveCsr(5, 5);
+    cout << "    |  |        /       \\   |      |";
+    moveCsr(6, 5);
+    cout << " ===/  |       /         \\  \\====  \\====";
+
+    moveCsr(7, 20);
+    cout << "===== |\\   | \\      /    /=\\     |===\\  |===  |==\\  /===";
+    moveCsr(8, 20);
+    cout << "  |   | \\  |  \\    /    /   \\    |   |  |__   |==/  \\___";
+    moveCsr(9, 20);
+    cout << "  |   |  \\ |   \\  /    /=====\\   |   |  |     | \\       \\";
+    moveCsr(10, 20);
+    cout << "===== |   \\|    \\/    /       \\  |===/  |===  |  \\   ===/";
+    consoleColorSet(37);
+}
+
+void drawPlayField() {
+    for (int i = 0; i < 80; i++) {
+        cout << "-";
+    }
+    cout << endl;
+    for (int i = 0; i < 23; i++) {
+        cout << "|";
+        for (int j = 0; j < 78; j++) {
+            cout << " ";
+        }
+        cout << "|" << endl;
+    }
+    for (int i = 0; i < 80; i++) {
+        cout << "-";
+    }
+}
+
+void normalColor() {
+    consoleColorSet(40);
+    consoleColorSet(37);
+}
+
+void invertColor() {
+    consoleColorSet(43);
+    consoleColorSet(30);
+}
+
+void drawHostGame(short menuSelection) {
+    if (menuSelection == 0) {
+        invertColor();
+    }
+    else {
+        normalColor();
+    }
+    moveCsr(14, 32);
+    cout << "   Host Game   ";
+}
+
+void drawConnect(short menuSelection) {
+    if (menuSelection == 1) {
+        invertColor();
+    }
+    else {
+        normalColor();
+    }
+    moveCsr(17, 32);
+    cout << "    Connect    ";
+}
+
+void drawExit(short menuSelection) {
+    if (menuSelection >= 2) {
+        invertColor();
+    }
+    else {
+        normalColor();
+    }
+    moveCsr(20, 32);
+    cout << "     Exit!     ";
 }
