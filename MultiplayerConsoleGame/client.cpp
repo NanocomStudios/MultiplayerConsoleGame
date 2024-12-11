@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <iostream>
 
+#include "screenCtrl.h"
+
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
@@ -16,8 +18,13 @@
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
 
-int __cdecl client(char ipaddr[])
+int __cdecl client()
 {
+    system("cls");
+    char ipaddr[16] = "127.000.000.001";
+    
+    moveCsr(5, 5);
+    drawMsgBox();
 
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
@@ -42,7 +49,7 @@ int __cdecl client(char ipaddr[])
     hints.ai_protocol = IPPROTO_TCP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo("10.22.160.19", DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo(ipaddr, DEFAULT_PORT, &hints, &result);
     if (iResult != 0) {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();

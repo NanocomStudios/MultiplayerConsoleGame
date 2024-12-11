@@ -11,6 +11,7 @@ void drawMenu();
 void drawHostGame(short menuSelection);
 void drawConnect(short menuSelection);
 void drawExit(short menuSelection);
+void drawMsgBox();
 
 void normalColor();
 void invertColor();

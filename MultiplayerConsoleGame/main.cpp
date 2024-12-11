@@ -42,7 +42,9 @@ int main(int argc, char** argv) {
         }
         else if ((inp == 13) || (inp == 32)) {
             if (menuSelection == 0) {
-                //game();
+                server();
+            }else if (menuSelection == 1) {
+                client();
             }
             else if (menuSelection >= 2) {
                 normalColor();

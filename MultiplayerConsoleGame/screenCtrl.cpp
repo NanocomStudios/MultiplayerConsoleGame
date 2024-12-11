@@ -132,3 +132,20 @@ void drawExit(short menuSelection) {
     moveCsr(20, 32);
     cout << "     Exit!     ";
 }
+
+void drawMsgBox() {
+    consoleColorSet(104);
+    moveCsr(10, 20);
+    cout << "==============================";
+    moveCsr(11, 20);
+    cout << "|                            |";
+    moveCsr(12, 20);
+    cout << "|                            |";
+    moveCsr(13, 20);
+    cout << "|                            |";
+    moveCsr(14, 20);
+    cout << "|                            |";
+    moveCsr(15, 20);
+    cout << "==============================";
+    consoleColorSet(40);
+}
