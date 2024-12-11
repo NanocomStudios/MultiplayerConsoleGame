@@ -8,11 +8,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <conio.h>
+
+#include "screenCtrl.h"
+#include "game.h"
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
 // #pragma comment (lib, "Mswsock.lib")
 
-#define DEFAULT_BUFLEN 512
+#define DEFAULT_BUFLEN 1
 #define DEFAULT_PORT "27015"
 
 int __cdecl server(void)
@@ -100,17 +104,33 @@ int __cdecl server(void)
             printf("Bytes received: %d\n", iResult);
 
             // Echo the buffer back to the sender
-            char inp[100] = "";
-            while (1) {
-                for (int i = 0; i < 100; i++) {
-                    inp[i] = getchar();
-                    if (inp[i] == 10) {
-                        inp[i] == 0x1b;
-                        break;
-                    }
-                }
+            char inp[1] = "";
 
-                iSendResult = send(ClientSocket, inp, 100, 0);
+            char playerPosition = 40;
+
+            system("cls");
+            drawPlayField();
+            Player player;
+            Opponent opponent;
+            int opponentPosition = 40;
+
+            while (1) {
+                int keyIn = _getch();
+                if (keyIn == 75) {
+                    if (playerPosition > 6) {
+                        playerPosition--;
+                    }
+                    inp[0] = playerPosition;
+                    iSendResult = send(ClientSocket, inp, 1, 0);
+                }
+                else if (keyIn == 77) {
+                    if (playerPosition < 77) {
+                        playerPosition++;
+                    }
+                    inp[0] = playerPosition;
+                    iSendResult = send(ClientSocket, inp, 1, 0);
+                }
+                player.draw(playerPosition);
                 
             }
             

@@ -6,9 +6,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
-
+#include <thread>
 #include "screenCtrl.h"
-
+#include "client.h"
+#include "game.h"
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
@@ -18,23 +19,27 @@
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
 
+WSADATA wsaData;
+SOCKET ConnectSocket = INVALID_SOCKET;
+struct addrinfo* result = NULL,
+    * ptr = NULL,
+    hints;
+const char* sendbuf = "this is a test";
+char recvbuf[DEFAULT_BUFLEN];
+int iResult;
+int recvbuflen = DEFAULT_BUFLEN;
+
+bool isReceived = false;
+
 int __cdecl client()
 {
     system("cls");
-    char ipaddr[16] = "127.000.000.001";
+    //char ipaddr[16] = "127.000.000.001";
     
     moveCsr(5, 5);
     drawMsgBox();
 
-    WSADATA wsaData;
-    SOCKET ConnectSocket = INVALID_SOCKET;
-    struct addrinfo* result = NULL,
-        * ptr = NULL,
-        hints;
-    const char* sendbuf = "this is a test";
-    char recvbuf[DEFAULT_BUFLEN];
-    int iResult;
-    int recvbuflen = DEFAULT_BUFLEN;
+    
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -49,7 +54,7 @@ int __cdecl client()
     hints.ai_protocol = IPPROTO_TCP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(ipaddr, DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo("localhost", DEFAULT_PORT, &hints, &result);
     if (iResult != 0) {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
@@ -107,11 +112,36 @@ int __cdecl client()
     }
 
     // Receive until the peer closes the connection
-    do {
+    std::thread t1(receive);
+    t1.detach();
 
+    system("cls");
+    drawPlayField();
+    Player player;
+    Opponent opponent;
+    int opponentPosition = 40;
+
+    while (10) {
+        Sleep(10);
+        if (isReceived == true) {
+            opponentPosition = recvbuf[0];
+            isReceived = false;
+        }
+        opponent.draw(opponentPosition);
+    }
+
+    // cleanup
+    closesocket(ConnectSocket);
+    WSACleanup();
+    return 0;
+}
+
+
+void receive() {
+    do {
         iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
         if (iResult > 0) {
-            std::cout << recvbuf;
+            isReceived = true;
         }
         //printf("Bytes received: %d\n", iResult);
         else if (iResult == 0)
@@ -120,9 +150,4 @@ int __cdecl client()
             printf("recv failed with error: %d\n", WSAGetLastError());
 
     } while (iResult > 0);
-
-    // cleanup
-    closesocket(ConnectSocket);
-    WSACleanup();
-    return 0;
 }
