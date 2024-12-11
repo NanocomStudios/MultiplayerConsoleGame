@@ -34,7 +34,7 @@ bool isReceived = false;
 int __cdecl client()
 {
     system("cls");
-    //char ipaddr[16] = "127.000.000.001";
+    char ipaddr[] = "127.0.0.1";
     
     moveCsr(5, 5);
     drawMsgBox();
@@ -54,7 +54,7 @@ int __cdecl client()
     hints.ai_protocol = IPPROTO_TCP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo("localhost", DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo(ipaddr, DEFAULT_PORT, &hints, &result);
     if (iResult != 0) {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();

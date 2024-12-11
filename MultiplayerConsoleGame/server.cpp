@@ -110,8 +110,12 @@ int __cdecl server(void)
 
             system("cls");
             drawPlayField();
+
             Player player;
             Opponent opponent;
+            
+            player.draw(playerPosition);
+            
             int opponentPosition = 40;
 
             while (1) {
