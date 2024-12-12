@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <thread>
+#include <time.h>
+
 #include "screenCtrl.h"
 #include "client.h"
 #include "game.h"
@@ -28,6 +30,8 @@ const char* sendbuf = "this is a test";
 char recvbuf[DEFAULT_BUFLEN];
 int iResult;
 int recvbuflen = DEFAULT_BUFLEN;
+
+int iSendResult;
 
 bool isReceived = false;
 
@@ -103,28 +107,60 @@ int __cdecl client()
     printf("Bytes Sent: %ld\n", iResult);
 
     // shutdown the connection since no more data will be sent
-    iResult = shutdown(ConnectSocket, SD_SEND);
+    /*iResult = shutdown(ConnectSocket, SD_SEND);
     if (iResult == SOCKET_ERROR) {
         printf("shutdown failed with error: %d\n", WSAGetLastError());
         closesocket(ConnectSocket);
         WSACleanup();
         return 1;
-    }
+    }*/
 
     // Receive until the peer closes the connection
     std::thread t1(receive);
     t1.detach();
+
+    char inp[1];
 
     system("cls");
     drawPlayField();
     Player player;
     Opponent opponent;
     int opponentPosition = 40;
+    char playerPosition = 40;
+
+    clock_t playerClock = clock();
 
     while (10) {
-        Sleep(10);
+        Sleep(1);
+
+        if ((GetKeyState(0x44) == (-128)) || (GetKeyState(0x44) == (-127))) { // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+            if ((clock() - playerClock) > PlayerMoveSpeed) {
+                if (playerPosition < 77) {
+                    playerPosition++;
+                }
+                inp[0] = playerPosition;
+                iSendResult = send(ConnectSocket, inp, 1, 0);
+                playerClock = clock();
+            }
+        }
+        if ((GetKeyState(0x41) == (-128)) || (GetKeyState(0x41) == (-127))) {
+
+            if ((clock() - playerClock) > PlayerMoveSpeed) {
+                if (playerPosition > 6) {
+                    playerPosition--;
+                }
+                inp[0] = playerPosition;
+                iSendResult = send(ConnectSocket, inp, 1, 0);
+                playerClock = clock();
+            }
+        }
+        player.draw(playerPosition);
         if (isReceived == true) {
             opponentPosition = recvbuf[0];
+            if ((opponentPosition > 77) || (opponentPosition < 6)) {
+                opponentPosition = 40;
+            }
+
             isReceived = false;
         }
         opponent.draw(opponentPosition);

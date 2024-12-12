@@ -2,6 +2,9 @@
 #ifndef GAME
 #define GAME
 
+#define PlayerFireRate 200
+#define PlayerMoveSpeed 20
+
 class Bullet {
 public:
     short x;
@@ -18,7 +21,7 @@ public:
 
 class Player {
 public:
-    short position = 0;
+    short position = 40;
 
 
 public:
@@ -30,7 +33,7 @@ public:
 
 class Opponent {
 public:
-    short position = 0;
+    short position = 40;
 
 
 public:

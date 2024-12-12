@@ -9,9 +9,12 @@
 #include <stdio.h>
 #include <iostream>
 #include <conio.h>
+#include <thread>
 
 #include "screenCtrl.h"
 #include "game.h"
+#include "server.h"
+
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
 // #pragma comment (lib, "Mswsock.lib")
@@ -19,66 +22,78 @@
 #define DEFAULT_BUFLEN 1
 #define DEFAULT_PORT "27015"
 
+WSADATA SwsaData;
+int SiResult;
+
+SOCKET ListenSocket = INVALID_SOCKET;
+SOCKET ClientSocket = INVALID_SOCKET;
+
+struct addrinfo* Sresult = NULL;
+struct addrinfo Shints;
+
+int SiSendResult;
+char Srecvbuf[DEFAULT_BUFLEN];
+int Srecvbuflen = DEFAULT_BUFLEN;
+
+bool SisReceived = false;
+
 int __cdecl server(void)
 {
-    WSADATA wsaData;
-    int iResult;
-
-    SOCKET ListenSocket = INVALID_SOCKET;
-    SOCKET ClientSocket = INVALID_SOCKET;
-
-    struct addrinfo* result = NULL;
-    struct addrinfo hints;
-
-    int iSendResult;
-    char recvbuf[DEFAULT_BUFLEN];
-    int recvbuflen = DEFAULT_BUFLEN;
-
     // Initialize Winsock
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (iResult != 0) {
-        printf("WSAStartup failed with error: %d\n", iResult);
+    SiResult = WSAStartup(MAKEWORD(2, 2), &SwsaData);
+    if (SiResult != 0) {
+        printf("WSAStartup failed with error: %d\n", SiResult);
         return 1;
     }
 
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_flags = AI_PASSIVE;
+    ZeroMemory(&Shints, sizeof(Shints));
+    Shints.ai_family = AF_INET;
+    Shints.ai_socktype = SOCK_STREAM;
+    Shints.ai_protocol = IPPROTO_TCP;
+    Shints.ai_flags = AI_PASSIVE;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
-    if (iResult != 0) {
-        printf("getaddrinfo failed with error: %d\n", iResult);
+    SiResult = getaddrinfo(NULL, DEFAULT_PORT, &Shints, &Sresult);
+    if (SiResult != 0) {
+        printf("getaddrinfo failed with error: %d\n", SiResult);
         WSACleanup();
         return 1;
     }
 
     // Create a SOCKET for the server to listen for client connections.
-    ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    ListenSocket = socket(Sresult->ai_family, Sresult->ai_socktype, Sresult->ai_protocol);
     if (ListenSocket == INVALID_SOCKET) {
         printf("socket failed with error: %ld\n", WSAGetLastError());
-        freeaddrinfo(result);
+        freeaddrinfo(Sresult);
         WSACleanup();
         return 1;
     }
 
     // Setup the TCP listening socket
-    iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
-    if (iResult == SOCKET_ERROR) {
+    SiResult = bind(ListenSocket, Sresult->ai_addr, (int)Sresult->ai_addrlen);
+    if (SiResult == SOCKET_ERROR) {
         printf("bind failed with error: %d\n", WSAGetLastError());
-        freeaddrinfo(result);
+        freeaddrinfo(Sresult);
         closesocket(ListenSocket);
         WSACleanup();
         return 1;
     }
 
-    freeaddrinfo(result);
+    freeaddrinfo(Sresult);
 
-    iResult = listen(ListenSocket, SOMAXCONN);
-    if (iResult == SOCKET_ERROR) {
-        printf("listen failed with error: %d\n", WSAGetLastError());
+    system("cls");
+    drawPlayField();
+
+    drawMsgBox();
+    consoleColorSet(104);
+    moveCsr(11, 21);
+    std::cout << "  Waiting for a Connection";
+    moveCsr(13, 21);
+
+    SiResult = listen(ListenSocket, SOMAXCONN);
+    if (SiResult == SOCKET_ERROR) {
+        printf("      listen failed.      ");
+        consoleColorSet(40);
         closesocket(ListenSocket);
         WSACleanup();
         return 1;
@@ -87,79 +102,86 @@ int __cdecl server(void)
     // Accept a client socket
     ClientSocket = accept(ListenSocket, NULL, NULL);
     if (ClientSocket == INVALID_SOCKET) {
-        printf("accept failed with error: %d\n", WSAGetLastError());
+        printf("      accept failed.      ");
+        consoleColorSet(40);
         closesocket(ListenSocket);
         WSACleanup();
         return 1;
     }
 
+    consoleColorSet(40);
     // No longer need server socket
     closesocket(ListenSocket);
 
-    // Receive until the peer shuts down the connection
-    do {
+    std::thread t1(Sreceive);
+    t1.detach();
+    
+    char inp[1] = "";
 
-        iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
-        if (iResult > 0) {
-            printf("Bytes received: %d\n", iResult);
+    char playerPosition = 40;
 
-            // Echo the buffer back to the sender
-            char inp[1] = "";
+    system("cls");
+    drawPlayField();
 
-            char playerPosition = 40;
+    Player player;
+    Opponent opponent;
+    int opponentPosition = 40;
 
-            system("cls");
-            drawPlayField();
+    clock_t playerClock = clock();
 
-            Player player;
-            Opponent opponent;
-            
-            player.draw(playerPosition);
-            
-            int opponentPosition = 40;
+    player.draw(playerPosition);
+    opponent.draw(opponentPosition);
 
-            while (1) {
-                int keyIn = _getch();
-                if (keyIn == 75) {
-                    if (playerPosition > 6) {
-                        playerPosition--;
-                    }
-                    inp[0] = playerPosition;
-                    iSendResult = send(ClientSocket, inp, 1, 0);
+    while (1) {
+        Sleep(1);
+
+        if ((GetKeyState(0x27) == (-128)) || (GetKeyState(0x27) == (-127))) { // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+            if ((clock() - playerClock) > PlayerMoveSpeed) {
+                if (playerPosition < 77) {
+                    playerPosition++;
                 }
-                else if (keyIn == 77) {
-                    if (playerPosition < 77) {
-                        playerPosition++;
-                    }
-                    inp[0] = playerPosition;
-                    iSendResult = send(ClientSocket, inp, 1, 0);
-                }
-                player.draw(playerPosition);
-                
+                inp[0] = playerPosition;
+                SiSendResult = send(ClientSocket, inp, 1, 0);
+                playerClock = clock();
             }
-            
-            if (iSendResult == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
-                closesocket(ClientSocket);
-                WSACleanup();
-                return 1;
-            }
-            printf("Bytes sent: %d\n", iSendResult);
         }
-        else if (iResult == 0)
-            printf("Connection closing...\n");
-        else {
-            printf("recv failed with error: %d\n", WSAGetLastError());
+        if ((GetKeyState(0x25) == (-128)) || (GetKeyState(0x25) == (-127))) {
+
+            if ((clock() - playerClock) > PlayerMoveSpeed) {
+                if (playerPosition > 6) {
+                    playerPosition--;
+                }
+                inp[0] = playerPosition;
+                SiSendResult = send(ClientSocket, inp, 1, 0);
+                playerClock = clock();
+            }
+        }
+
+        player.draw(playerPosition);
+
+        if (SiSendResult == SOCKET_ERROR) {
+            printf("send failed with error: %d\n", WSAGetLastError());
             closesocket(ClientSocket);
             WSACleanup();
-            return 1;
+            break;
         }
 
-    } while (iResult > 0);
+        if (SisReceived == true) {
+            opponentPosition = Srecvbuf[0];
+            if ((opponentPosition > 77) || (opponentPosition < 6)) {
+                opponentPosition = 40;
+            }
+
+            SisReceived = false;
+        }
+        opponent.draw(opponentPosition);
+
+    }
+
 
     // shutdown the connection since we're done
-    iResult = shutdown(ClientSocket, SD_SEND);
-    if (iResult == SOCKET_ERROR) {
+    SiResult = shutdown(ClientSocket, SD_SEND);
+    if (SiResult == SOCKET_ERROR) {
         printf("shutdown failed with error: %d\n", WSAGetLastError());
         closesocket(ClientSocket);
         WSACleanup();
@@ -171,4 +193,25 @@ int __cdecl server(void)
     WSACleanup();
 
     return 0;
+}
+
+void Sreceive() {
+    do {
+
+        SiResult = recv(ClientSocket, Srecvbuf, Srecvbuflen, 0);
+        if (SiResult > 0) {
+            
+            SisReceived = true;
+            
+        }
+        else if (SiResult == 0)
+            printf("Connection closing...\n");
+        else {
+            printf("recv failed with error: %d\n", WSAGetLastError());
+            closesocket(ClientSocket);
+            WSACleanup();
+            break;
+        }
+
+    } while (SiResult > 0);
 }
