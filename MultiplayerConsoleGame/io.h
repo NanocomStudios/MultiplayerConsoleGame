@@ -1,5 +1,5 @@
 #pragma once
 #ifndef IO
 #define IO
-void getIP(char ipaddr[]);
+void getIP(char inputString[]);
 #endif

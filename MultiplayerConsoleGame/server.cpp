@@ -19,7 +19,7 @@
 #pragma comment (lib, "Ws2_32.lib")
 // #pragma comment (lib, "Mswsock.lib")
 
-#define DEFAULT_BUFLEN 1
+#define DEFAULT_BUFLEN 2
 #define DEFAULT_PORT "27015"
 
 WSADATA SwsaData;
@@ -82,13 +82,16 @@ int __cdecl server(void)
     freeaddrinfo(Sresult);
 
     system("cls");
+    consoleColorSet(94);
     drawPlayField();
-
+    consoleColorSet(37);
     drawMsgBox();
     consoleColorSet(104);
-    moveCsr(11, 21);
+    moveCsr(11, 26);
     std::cout << "  Waiting for a Connection";
-    moveCsr(13, 21);
+    
+    moveCsr(14, 34);
+    std::cout << "PORT:  " << DEFAULT_PORT;
 
     SiResult = listen(ListenSocket, SOMAXCONN);
     if (SiResult == SOCKET_ERROR) {
@@ -116,7 +119,7 @@ int __cdecl server(void)
     std::thread t1(Sreceive);
     t1.detach();
     
-    char inp[1] = "";
+    char inp[2] = {0,0};
 
     char playerPosition = 40;
 
@@ -141,7 +144,7 @@ int __cdecl server(void)
                     playerPosition++;
                 }
                 inp[0] = playerPosition;
-                SiSendResult = send(ClientSocket, inp, 1, 0);
+                SiSendResult = send(ClientSocket, inp, DEFAULT_BUFLEN, 0);
                 playerClock = clock();
             }
         }
@@ -152,7 +155,7 @@ int __cdecl server(void)
                     playerPosition--;
                 }
                 inp[0] = playerPosition;
-                SiSendResult = send(ClientSocket, inp, 1, 0);
+                SiSendResult = send(ClientSocket, inp, DEFAULT_BUFLEN, 0);
                 playerClock = clock();
             }
         }

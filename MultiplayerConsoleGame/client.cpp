@@ -12,13 +12,14 @@
 #include "screenCtrl.h"
 #include "client.h"
 #include "game.h"
+#include "io.h"
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
 
-#define DEFAULT_BUFLEN 512
+#define DEFAULT_BUFLEN 2
 #define DEFAULT_PORT "27015"
 
 WSADATA wsaData;
@@ -37,13 +38,55 @@ bool isReceived = false;
 
 int __cdecl client()
 {
-    system("cls");
-    char ipaddr[] = "127.0.0.1";
-    
-    moveCsr(5, 5);
-    drawMsgBox();
+    char inputString[] = "00000000000027015";
 
+    getIP(inputString);
+
+    system("cls");
+    consoleColorSet(95);
+    drawPlayField();
+    consoleColorSet(37);
+    drawMsgBox();
+    consoleColorSet(104);
+    moveCsr(12, 26);
+    std::cout << "         Connecting...";
+
+    consoleColorSet(40);
+
+    //std::cout << inputString << std::endl;
+    int numberCount = 0;
+
+    for (int i = 0; i < 12; i++) {
+        if (inputString[i] != '0') {
+            numberCount++;
+        }
+    }
+
+    numberCount += 3;
+
+    char* ipaddr = (char*)malloc(numberCount + 1);
     
+    numberCount = 0;
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (inputString[(i * 3) + j] != '0') {
+                ipaddr[numberCount] = inputString[(i * 3) + j];
+                numberCount++;
+            }
+        }
+        ipaddr[numberCount] = '.';
+        numberCount++;
+    }
+
+    for (int j = 0; j < 3; j++) {
+        if (inputString[9 + j] != '0') {
+            ipaddr[numberCount] = inputString[9 + j];
+            numberCount++;
+        }
+    }
+    ipaddr[numberCount] = 0;
+    //std::cout << ipaddr << std::endl;
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -88,6 +131,7 @@ int __cdecl client()
     }
 
     freeaddrinfo(result);
+    free(ipaddr);
 
     if (ConnectSocket == INVALID_SOCKET) {
         printf("Unable to connect to server!\n");
@@ -122,7 +166,9 @@ int __cdecl client()
     char inp[1];
 
     system("cls");
+    consoleColorSet(94);
     drawPlayField();
+    consoleColorSet(37);
     Player player;
     Opponent opponent;
     int opponentPosition = 40;
@@ -130,7 +176,7 @@ int __cdecl client()
 
     clock_t playerClock = clock();
 
-    while (10) {
+    while (1) {
         Sleep(1);
 
         if ((GetKeyState(0x44) == (-128)) || (GetKeyState(0x44) == (-127))) { // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
