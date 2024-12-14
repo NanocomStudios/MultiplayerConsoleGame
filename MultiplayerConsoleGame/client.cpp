@@ -38,7 +38,7 @@ bool isReceived = false;
 
 int __cdecl client()
 {
-    char inputString[] = "00000000000027015";
+    char inputString[] = "12700000000127015";
 
     getIP(inputString);
 
@@ -55,24 +55,25 @@ int __cdecl client()
 
     //std::cout << inputString << std::endl;
     int numberCount = 0;
+    char zeroCounter = 0;
 
-    for (int i = 0; i < 12; i++) {
-        if (inputString[i] != '0') {
-            numberCount++;
-        }
-    }
-
-    numberCount += 3;
-
-    char* ipaddr = (char*)malloc(numberCount + 1);
-    
-    numberCount = 0;
+    char ipaddr[16];
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             if (inputString[(i * 3) + j] != '0') {
                 ipaddr[numberCount] = inputString[(i * 3) + j];
                 numberCount++;
+            }
+            else {
+                if (zeroCounter == 2) {
+                    ipaddr[numberCount] = '0';
+                    numberCount++;
+                    zeroCounter = 0;
+                }
+                else {
+                    zeroCounter++;
+                }
             }
         }
         ipaddr[numberCount] = '.';
@@ -131,7 +132,6 @@ int __cdecl client()
     }
 
     freeaddrinfo(result);
-    free(ipaddr);
 
     if (ConnectSocket == INVALID_SOCKET) {
         printf("Unable to connect to server!\n");
@@ -163,7 +163,7 @@ int __cdecl client()
     std::thread t1(receive);
     t1.detach();
 
-    char inp[1];
+    char inp[2];
 
     system("cls");
     consoleColorSet(94);
@@ -174,6 +174,7 @@ int __cdecl client()
     int opponentPosition = 40;
     char playerPosition = 40;
 
+    player.draw(playerPosition);
     clock_t playerClock = clock();
 
     while (1) {
@@ -185,7 +186,7 @@ int __cdecl client()
                     playerPosition++;
                 }
                 inp[0] = playerPosition;
-                iSendResult = send(ConnectSocket, inp, 1, 0);
+                player.draw(playerPosition);
                 playerClock = clock();
             }
         }
@@ -196,20 +197,21 @@ int __cdecl client()
                     playerPosition--;
                 }
                 inp[0] = playerPosition;
-                iSendResult = send(ConnectSocket, inp, 1, 0);
+                player.draw(playerPosition);
                 playerClock = clock();
             }
         }
-        player.draw(playerPosition);
+        
+
+        iSendResult = send(ConnectSocket, inp, 1, 0);
         if (isReceived == true) {
             opponentPosition = recvbuf[0];
             if ((opponentPosition > 77) || (opponentPosition < 6)) {
                 opponentPosition = 40;
             }
-
+            opponent.draw(opponentPosition);
             isReceived = false;
         }
-        opponent.draw(opponentPosition);
     }
 
     // cleanup

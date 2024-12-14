@@ -144,7 +144,7 @@ int __cdecl server(void)
                     playerPosition++;
                 }
                 inp[0] = playerPosition;
-                SiSendResult = send(ClientSocket, inp, DEFAULT_BUFLEN, 0);
+                player.draw(playerPosition);
                 playerClock = clock();
             }
         }
@@ -155,13 +155,14 @@ int __cdecl server(void)
                     playerPosition--;
                 }
                 inp[0] = playerPosition;
-                SiSendResult = send(ClientSocket, inp, DEFAULT_BUFLEN, 0);
+                player.draw(playerPosition);
                 playerClock = clock();
             }
         }
 
-        player.draw(playerPosition);
+        
 
+        SiSendResult = send(ClientSocket, inp, DEFAULT_BUFLEN, 0);
         if (SiSendResult == SOCKET_ERROR) {
             printf("send failed with error: %d\n", WSAGetLastError());
             closesocket(ClientSocket);
@@ -174,10 +175,9 @@ int __cdecl server(void)
             if ((opponentPosition > 77) || (opponentPosition < 6)) {
                 opponentPosition = 40;
             }
-
+            opponent.draw(opponentPosition);
             SisReceived = false;
         }
-        opponent.draw(opponentPosition);
 
     }
 

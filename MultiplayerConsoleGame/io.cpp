@@ -55,8 +55,11 @@ void getIP(char inputString[]) {
 	moveCsr(14, 34);
 	cout << "PORT:  27015";
 	
+	for (int i = 0; i < 12; i++) {
+		updateCell(inputString, i, 104);
+	}
 	updateCell(inputString, cursorloc, 102);
-
+	consoleColorSet(40);
 	while (1) {
 
 		char inp = _getch();
