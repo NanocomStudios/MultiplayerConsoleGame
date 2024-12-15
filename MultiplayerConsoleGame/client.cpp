@@ -53,7 +53,6 @@ int __cdecl client()
 
     consoleColorSet(40);
 
-    //std::cout << inputString << std::endl;
     int numberCount = 0;
     char zeroCounter = 0;
 
@@ -87,7 +86,6 @@ int __cdecl client()
         }
     }
     ipaddr[numberCount] = 0;
-    //std::cout << ipaddr << std::endl;
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
