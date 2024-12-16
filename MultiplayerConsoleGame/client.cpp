@@ -49,20 +49,22 @@ int __cdecl client()
     drawMsgBox();
     consoleColorSet(104);
     moveCsr(12, 26);
-    std::cout << "         Connecting...";
+    //std::cout << "         Connecting...";
 
     consoleColorSet(40);
 
     int numberCount = 0;
     char zeroCounter = 0;
+    bool zeroLock = false;
 
     char ipaddr[16];
-
+    std::cout << inputString << std::endl;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            if (inputString[(i * 3) + j] != '0') {
+            if ((inputString[(i * 3) + j] != '0') || ((inputString[(i * 3) + j] == '0')&&(zeroLock == true))) {
                 ipaddr[numberCount] = inputString[(i * 3) + j];
                 numberCount++;
+                zeroLock = true;
             }
             else {
                 if (zeroCounter == 2) {
@@ -77,6 +79,8 @@ int __cdecl client()
         }
         ipaddr[numberCount] = '.';
         numberCount++;
+        zeroCounter = 0;
+        zeroLock = false;
     }
 
     for (int j = 0; j < 3; j++) {
@@ -86,7 +90,7 @@ int __cdecl client()
         }
     }
     ipaddr[numberCount] = 0;
-
+    //std::cout << ipaddr << std::endl;
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
